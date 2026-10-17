@@ -1,0 +1,12 @@
+{
+  "name": "food-tracker-tests",
+  "private": true,
+  "description": "Dev-only tooling for the Weekly Food Planner's automated test suites. The app itself has no dependencies and no build step — see README.md.",
+  "scripts": {
+    "test": "node tests/run-all.js",
+    "test:install-browser": "playwright install chromium"
+  },
+  "devDependencies": {
+    "playwright": "1.61.1"
+  }
+}
