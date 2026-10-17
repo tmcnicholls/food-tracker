@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weekly Food Journal</title>
+<meta name="description" content="A simple, private weekly food journal for MAN v FAT Football participants. No calorie counting, no accounts.">
+
+<meta name="theme-color" content="#1b5e3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Food Journal">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<header class="app-header">
+  <h1>Weekly Food Journal</h1>
+  <p class="subtitle">MAN v FAT — simple, honest food tracking. No calorie counting.</p>
+</header>
+
+<main id="main-content">
+
+  <section class="panel" aria-labelledby="saved-weeks-heading">
+    <h2 id="saved-weeks-heading" class="panel-heading">Saved weeks</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="week-picker">Viewing week</label>
+        <select id="week-picker" aria-describedby="week-picker-hint"></select>
+        <p id="week-picker-hint" class="hint">Previously saved weeks stay on this device until you clear them.</p>
+      </div>
+      <button type="button" id="new-week-btn" class="secondary-btn">Start new week</button>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="settings-heading">
+    <h2 id="settings-heading" class="panel-heading">Journal settings</h2>
+
+    <p class="week-range" id="week-range" aria-live="polite"></p>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="start-weekday">Week starts on</label>
+        <select id="start-weekday">
+          <option>Monday</option>
+          <option>Tuesday</option>
+          <option>Wednesday</option>
+          <option>Thursday</option>
+          <option>Friday</option>
+          <option>Saturday</option>
+          <option>Sunday</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="start-date">Start date</label>
+        <input type="date" id="start-date">
+      </div>
+    </div>
+
+    <fieldset class="field">
+      <legend>Consistency profile</legend>
+      <div class="segmented" role="radiogroup" aria-label="Weekly consistency profile">
+        <button type="button" class="seg-btn" data-profile="great" aria-pressed="false">Great</button>
+        <button type="button" class="seg-btn" data-profile="medium" aria-pressed="false">Medium</button>
+        <button type="button" class="seg-btn" data-profile="poor" aria-pressed="false">Poor</button>
+      </div>
+      <p class="hint">Controls the suggested meal pattern only — it isn't a score.</p>
+    </fieldset>
+
+    <div class="field checkbox-field">
+      <label>
+        <input type="checkbox" id="takeaway-checkbox">
+        Include a takeaway meal on Saturday
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="generate-btn" class="primary-btn">Generate journal</button>
+    </div>
+    <p id="generate-feedback" class="hint" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="journal-heading">
+    <h2 id="journal-heading" class="panel-heading">Your week</h2>
+    <div id="journal" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="export-heading">
+    <h2 id="export-heading" class="panel-heading">Export</h2>
+    <button type="button" id="copy-btn" class="primary-btn">Copy journal</button>
+    <p id="copy-feedback" class="hint" role="status" aria-live="polite"></p>
+    <textarea id="copy-fallback" class="copy-fallback hidden" readonly aria-label="Journal text — select and copy manually"></textarea>
+  </section>
+
+  <section class="panel danger-zone" aria-labelledby="danger-heading">
+    <h2 id="danger-heading" class="panel-heading">Storage</h2>
+    <p class="hint">Everything is saved only on this device. Clearing browser data will erase it.</p>
+    <button type="button" id="clear-data-btn" class="text-btn">Clear all saved journals and preferences</button>
+    <p id="storage-warning" class="hint warning hidden" role="status">
+      This browser is blocking local storage, so your journal won't be saved between visits.
+    </p>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p>All data stays on this device. Nothing is sent to a server.</p>
+</footer>
+
+<dialog id="confirm-dialog">
+  <form method="dialog" id="confirm-dialog-form">
+    <h2 id="confirm-dialog-title">Are you sure?</h2>
+    <p id="confirm-dialog-message"></p>
+    <div class="dialog-actions">
+      <button type="submit" value="cancel" class="secondary-btn">Cancel</button>
+      <button type="submit" value="confirm" class="primary-btn" id="confirm-dialog-confirm-btn">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

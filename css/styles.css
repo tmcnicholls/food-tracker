@@ -1,0 +1,465 @@
+/* Weekly Food Journal — mobile-first styles.
+   Light theme by default; dark theme via prefers-color-scheme.
+   No animation-heavy decoration, per PRD interaction principles. */
+
+:root {
+  --green: #1b5e3d;
+  --green-light: #e4f3ea;
+  --amber: #b5650a;
+  --amber-light: #fcecd6;
+  --red: #a4302a;
+  --red-light: #fbe4e2;
+  --accent: #1b5e3d;
+  --accent-contrast: #ffffff;
+
+  --bg: #f6f5f1;
+  --panel-bg: #ffffff;
+  --text: #1c1c1a;
+  --text-muted: #5b5a54;
+  --border: #d9d6cc;
+  --input-bg: #ffffff;
+  --focus-ring: #0b5fff;
+
+  --radius: 10px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15170f;
+    --panel-bg: #1f221a;
+    --text: #f1efe6;
+    --text-muted: #b9b6a9;
+    --border: #3a3d31;
+    --input-bg: #272a20;
+    --green: #5fd79a;
+    --green-light: #173228;
+    --amber: #f0a84e;
+    --amber-light: #3a2a10;
+    --red: #f08a82;
+    --red-light: #3a1917;
+    --accent: #5fd79a;
+    --accent-contrast: #0c1a12;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+  font-size: 16px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: auto;
+}
+.skip-link:focus {
+  left: var(--space-3);
+  top: var(--space-3);
+  z-index: 100;
+  background: var(--panel-bg);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  border: 2px solid var(--focus-ring);
+}
+
+.app-header {
+  padding: var(--space-5) var(--space-4) var(--space-3);
+  text-align: center;
+}
+.app-header h1 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.5rem;
+}
+.subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 var(--space-3) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+.panel-heading {
+  margin: 0 0 var(--space-3);
+  font-size: 1.05rem;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 160px;
+  min-width: 0;
+  margin: 0 0 var(--space-3);
+  border: none;
+  padding: 0;
+}
+
+.field legend {
+  padding: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+select, input[type="date"], input[type="text"] {
+  font-size: 1rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  min-height: 44px;
+}
+
+select:focus-visible, input:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin: var(--space-1) 0 0;
+}
+.hint.warning {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.checkbox-field label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 500;
+}
+.checkbox-field input {
+  width: 22px;
+  height: 22px;
+}
+
+.week-range {
+  font-weight: 600;
+  margin: 0 0 var(--space-4);
+}
+
+.segmented {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.seg-btn, .primary-btn, .secondary-btn, .text-btn, .icon-btn {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.seg-btn {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.seg-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.primary-btn {
+  min-height: 48px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 1rem;
+  font-weight: 700;
+  width: 100%;
+}
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  color: var(--red);
+  text-decoration: underline;
+  padding: var(--space-2) 0;
+  font-size: 0.9rem;
+}
+
+.actions {
+  margin-top: var(--space-2);
+}
+
+/* --- Journal / day sections --- */
+
+.day {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-3);
+  background: var(--panel-bg);
+  overflow: hidden;
+}
+
+.day > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-weight: 700;
+  min-height: 44px;
+}
+.day > summary::-webkit-details-marker { display: none; }
+.day > summary::before {
+  content: '▸';
+  margin-right: var(--space-2);
+  color: var(--text-muted);
+  transition: transform 0.12s ease;
+}
+.day[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.day-heading-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+}
+.day-heading-weekday {
+  font-size: 1rem;
+}
+.day-heading-date {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.day-status-group {
+  display: flex;
+  gap: var(--space-1);
+}
+.status-btn {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--input-bg);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.status-btn[aria-pressed="true"].status-green { border-color: var(--green); background: var(--green-light); }
+.status-btn[aria-pressed="true"].status-amber { border-color: var(--amber); background: var(--amber-light); }
+.status-btn[aria-pressed="true"].status-red { border-color: var(--red); background: var(--red-light); }
+
+.day-status-label {
+  padding: 0 var(--space-4) var(--space-2);
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.day-body {
+  padding: 0 var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.day-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.meal-row {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+
+.meal-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.meal-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.meal-controls {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.icon-btn {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn[aria-pressed="true"].confirm-btn {
+  background: var(--green-light);
+  border-color: var(--green);
+  color: var(--green);
+}
+.icon-btn[aria-pressed="true"].skip-btn {
+  background: var(--red-light);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.meal-text {
+  margin: 0;
+  font-size: 0.98rem;
+}
+.meal-text.is-skipped {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.meal-status-tag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.meal-text-input {
+  width: 100%;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.copy-fallback {
+  width: 100%;
+  min-height: 160px;
+  margin-top: var(--space-2);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.danger-zone {
+  border-color: var(--red);
+}
+
+dialog#confirm-dialog {
+  border: none;
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  max-width: 400px;
+  width: 90%;
+  background: var(--panel-bg);
+  color: var(--text);
+}
+dialog#confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.dialog-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+.dialog-actions .primary-btn, .dialog-actions .secondary-btn {
+  width: auto;
+}
+
+.app-footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: var(--space-4);
+}
+
+@media (min-width: 480px) {
+  .field-row > .field {
+    flex: 1 1 0;
+  }
+}
