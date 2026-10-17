@@ -40,6 +40,9 @@ const storageWarningEl = document.getElementById('storage-warning');
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const themeToggleLabelEl = document.getElementById('theme-toggle-label');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+const updateBannerEl = document.getElementById('update-banner');
+const updateApplyBtn = document.getElementById('update-apply-btn');
+const updateDismissBtn = document.getElementById('update-dismiss-btn');
 
 const dialogEl = document.getElementById('confirm-dialog');
 const dialogTitleEl = document.getElementById('confirm-dialog-title');
@@ -567,6 +570,96 @@ journalEl.addEventListener('focusout', (e) => {
   handleMealInputCommit(dayIndex, mealKey, e.target);
 });
 
+// --- App update lifecycle -----------------------------------------------
+//
+// sw.js deliberately holds a newly installed worker in the `waiting` state
+// instead of activating it immediately (see comments there), so that an
+// update never force-reloads the page out from under an in-progress edit.
+// This section detects a waiting update, shows a prompt, and only tells the
+// worker to take over once the user chooses to — then reloads exactly once.
+
+const UPDATE_CHECK_MIN_INTERVAL_MS = 60_000;
+let lastUpdateCheckAt = 0;
+let hasReloadedForUpdate = false;
+let updateRequested = false;
+let swRegistration = null;
+
+function showUpdateBanner() {
+  updateBannerEl.classList.remove('hidden');
+}
+
+function hideUpdateBanner() {
+  updateBannerEl.classList.add('hidden');
+}
+
+function checkForUpdate() {
+  if (!swRegistration) return;
+  const now = Date.now();
+  if (now - lastUpdateCheckAt < UPDATE_CHECK_MIN_INTERVAL_MS) return;
+  lastUpdateCheckAt = now;
+  // A failed check (offline, flaky connection) must never break normal use.
+  swRegistration.update().catch(() => {});
+}
+
+function watchForWaitingWorker(registration) {
+  // Covers the case where an update finished installing while this page
+  // wasn't open (e.g. a background check from a previous visit).
+  if (registration.waiting && navigator.serviceWorker.controller) {
+    showUpdateBanner();
+  }
+  registration.addEventListener('updatefound', () => {
+    const newWorker = registration.installing;
+    if (!newWorker) return;
+    newWorker.addEventListener('statechange', () => {
+      // Only prompt for an *update* (a controller already exists from a
+      // previous visit) — a first-ever install has nothing to replace.
+      if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+        showUpdateBanner();
+      }
+    });
+  });
+}
+
+updateApplyBtn.addEventListener('click', () => {
+  updateRequested = true;
+  swRegistration?.waiting?.postMessage({ type: 'SKIP_WAITING' });
+});
+
+updateDismissBtn.addEventListener('click', hideUpdateBanner);
+
+if ('serviceWorker' in navigator) {
+  // `controllerchange` also fires the very first time a page is claimed
+  // (no controller -> new worker), not just on a genuine update handoff —
+  // reloading then would needlessly refresh a brand-new first visit. Only
+  // reload when *we* asked for the update via the banner, and only once.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!updateRequested || hasReloadedForUpdate) return;
+    hasReloadedForUpdate = true;
+    window.location.reload();
+  });
+
+  window.addEventListener('load', () => {
+    const base = new URL('.', window.location.href);
+    navigator.serviceWorker.register(new URL('sw.js', base))
+      .then((registration) => {
+        swRegistration = registration;
+        watchForWaitingWorker(registration);
+        checkForUpdate();
+      })
+      .catch(() => {
+        // offline support is a nice-to-have; ignore registration failures
+      });
+  });
+
+  // iOS Home Screen PWAs are almost always *resumed*, not cold-launched —
+  // re-check whenever the app comes back to the foreground, not just once
+  // at load. Throttled by checkForUpdate() to avoid excessive polling.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkForUpdate();
+  });
+  window.addEventListener('pageshow', () => checkForUpdate());
+}
+
 // --- Boot --------------------------------------------------------------
 
 if (!isStorageAvailable()) {
@@ -574,12 +667,3 @@ if (!isStorageAvailable()) {
 }
 applyTheme(appState.preferences.theme ?? 'auto');
 syncAll();
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const base = new URL('.', window.location.href);
-    navigator.serviceWorker.register(new URL('sw.js', base)).catch(() => {
-      // offline support is a nice-to-have; ignore registration failures
-    });
-  });
-}

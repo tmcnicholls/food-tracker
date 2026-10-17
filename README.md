@@ -105,9 +105,10 @@ while online.
 ## Updating the deployed app
 
 1. Make your changes locally and test with the local server above.
-2. If you changed any file listed in `sw.js`'s `APP_SHELL` array (or added a
-   new one), bump `CACHE_NAME` in `sw.js` (e.g. `v1` → `v2`) so installed
-   clients fetch the new version instead of serving a stale cache.
+2. If you added or removed a file from `sw.js`'s `APP_SHELL` array, bump
+   `CACHE_NAME` (e.g. `v3` → `v4`) so the next activation repopulates the
+   cache cleanly. This is good hygiene but is **not** what makes updates
+   show up any more — see "How updates are detected" below.
 3. Commit and push to `main`:
 
    ```bash
@@ -116,10 +117,58 @@ while online.
    git push
    ```
 
-4. GitHub Pages redeploys automatically within a minute or two. Already
-   installed PWAs pick up the update the next time they're opened with a
-   network connection (the service worker fetches and activates the new
-   cache in the background).
+4. GitHub Pages redeploys automatically within a minute or two.
+
+### How updates are detected on an installed Home Screen app
+
+`sw.js` uses a **network-first** fetch strategy: every request — including
+the HTML shell — tries the network first and only falls back to the cached
+copy when offline. This means a plain reload while online always fetches
+current content; the cache exists purely as an offline safety net, not as
+the primary source.
+
+For the service worker script itself, `js/app.js` proactively calls
+`registration.update()`:
+
+- once when the app loads,
+- again whenever the app returns to the foreground (`visibilitychange` /
+  `pageshow` — the common case for an installed iOS Home Screen app, which
+  is almost always *resumed* rather than cold-launched),
+
+throttled to at most once a minute so it never polls excessively, and
+wrapped so a failed check (e.g. offline) never breaks normal use.
+
+When an update is found, the new service worker installs but **does not
+activate automatically** — it waits. The app then shows a small banner:
+
+> A new version is available. **Update now**
+
+Tapping **Update now** tells the waiting worker to take over, and the page
+reloads itself exactly once to pick up the new version. Nothing happens
+automatically in the background without this prompt, specifically so an
+update can never interrupt something you're in the middle of typing or
+confirming. If you ignore the banner, the app keeps working exactly as
+before on the current version until you choose to update.
+
+### Known limitations (iOS / GitHub Pages)
+
+- GitHub Pages doesn't allow custom response headers, so we can't set
+  `Cache-Control: no-cache` on `sw.js` at the HTTP level. This isn't a
+  practical problem: browsers are spec-required to always bypass HTTP
+  cache for the top-level service worker script's own update check, so
+  this doesn't block update detection — it's listed here only because it's
+  a constraint we can't change, not one we need to.
+- iOS Safari's background service-worker update checks for installed
+  Home Screen apps are known to be infrequent/inconsistent in general.
+  The `visibilitychange`/`pageshow`-triggered `update()` calls above are
+  the mitigation: as long as the app is opened and foregrounded, an update
+  check happens within that minute's throttle window, rather than relying
+  solely on the browser's own (rarer) background schedule.
+- The update banner only appears once the new worker reaches the
+  `installed` state, which still requires an actual network fetch of
+  `sw.js` to succeed — on a persistently offline device, no update can be
+  detected until connectivity returns (expected, and the app continues to
+  work offline on whatever version is already installed).
 
 ## Regenerating icons
 

@@ -527,6 +527,38 @@ dialog#confirm-dialog::backdrop {
   padding: var(--space-4);
 }
 
+.update-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.16);
+}
+.update-banner-text {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.update-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+.update-banner-actions .primary-btn {
+  width: auto;
+}
+
 @media (min-width: 480px) {
   .field-row > .field {
     flex: 1 1 0;
