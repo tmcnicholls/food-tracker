@@ -304,10 +304,8 @@ function buildExportText(week) {
       const label = MEAL_LABELS[key];
       if (meal.status === 'skipped') {
         lines.push(`${label}: Skipped`);
-      } else if (meal.status === 'confirmed') {
-        lines.push(`${label}: ${meal.text}`);
       } else {
-        lines.push(`${label}: ${meal.text} (suggested — not yet confirmed)`);
+        lines.push(`${label}: ${meal.text}`);
       }
     });
     lines.push('');

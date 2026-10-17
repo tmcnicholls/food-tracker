@@ -1,0 +1,15 @@
+#!/bin/sh
+# Keeps sw.js's CACHE_NAME in sync with the files it caches, automatically,
+# on every commit. See scripts/update_sw_cache_version.py for why this
+# exists: it used to be a manual step and was once forgotten.
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+python3 scripts/update_sw_cache_version.py
+
+# If that changed sw.js, make sure the updated version is part of this commit.
+if ! git diff --quiet -- sw.js; then
+  git add sw.js
+fi
