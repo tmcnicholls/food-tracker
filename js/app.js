@@ -298,7 +298,8 @@ function buildExportText(week) {
   week.days.forEach((day) => {
     const date = parseISODate(day.date);
     const meta = STATUS_META[day.status] ?? STATUS_META.unassessed;
-    lines.push(`${weekdayName(date)} ${formatLongDate(date)} ${meta.emoji}`);
+    const statusSuffix = day.status === 'unassessed' ? '' : ` ${meta.emoji}`;
+    lines.push(`${weekdayName(date)} ${formatLongDate(date)}${statusSuffix}`);
     MEAL_ORDER.forEach((key) => {
       const meal = day.meals[key];
       const label = MEAL_LABELS[key];

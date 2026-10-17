@@ -29,7 +29,7 @@
 // noticed" either way — the network-first fetch handler and the update
 // lifecycle in app.js handle that — but it does still control when the
 // activate step repopulates the cache cleanly.
-const CACHE_NAME = 'mvf-food-journal-00b8584bcf8e';
+const CACHE_NAME = 'mvf-food-journal-38123a6e4a22';
 
 const APP_SHELL = [
   './',

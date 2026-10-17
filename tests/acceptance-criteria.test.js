@@ -145,6 +145,12 @@ const { REPO_ROOT } = require('./helpers/app-files');
 
   // --- AC-09: Copy journal copies readable plain text with days/dates/emoji/4 categories ---
   await check('AC-09 Copy journal puts correctly formatted text on the clipboard', async () => {
+    // AC-06's regenerate loop above reset every day back to unassessed —
+    // mark day 0 amber so this check can verify assessed-vs-unassessed
+    // emoji behaviour (see the next check).
+    await page.click('details.day[data-day-index="0"] .status-btn[data-status="amber"]');
+    await page.waitForTimeout(80);
+
     await page.click('#copy-btn');
     await page.waitForTimeout(150);
     const feedback = await page.innerText('#copy-feedback');
@@ -155,8 +161,17 @@ const { REPO_ROOT } = require('./helpers/app-files');
     ['Breakfast:', 'Lunch:', 'Tea:', 'Snacks:'].forEach((label) => {
       assert.ok(clipText.includes(label), `missing ${label} in export`);
     });
-    const dayCount = (clipText.match(/🟢|🟠|🔴|⚪/g) || []).length;
-    assert.strictEqual(dayCount, 7, `expected 7 day status emoji, found ${dayCount}`);
+  });
+
+  // --- unassessed days must not show the ⚪ (or any) status emoji in the export ---
+  await check('unassessed days have no status emoji in the export; scored days still do', async () => {
+    const clipText = await page.evaluate(() => navigator.clipboard.readText());
+    const lines = clipText.split('\n');
+    const tuesdayLine = lines.find((l) => l.startsWith('Tuesday '));
+    assert.ok(tuesdayLine && tuesdayLine.includes('🟠'), `expected the amber day's line to include 🟠, got "${tuesdayLine}"`);
+    const wednesdayLine = lines.find((l) => l.startsWith('Wednesday '));
+    assert.ok(wednesdayLine, 'expected a Wednesday line in the export');
+    assert.ok(!/🟢|🟠|🔴|⚪/.test(wednesdayLine), `expected no status emoji on an unassessed day's line, got "${wednesdayLine}"`);
   });
 
   // --- AC-02: change week start to Monday -> Monday..Sunday ---
