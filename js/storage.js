@@ -13,6 +13,7 @@ function defaultState() {
       startWeekday: 'Tuesday',
       profile: 'great',
       takeawayEnabled: false,
+      theme: 'auto',
     },
   };
 }

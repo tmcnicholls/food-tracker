@@ -1,7 +1,7 @@
 {
-  "name": "Weekly Food Journal",
-  "short_name": "Food Journal",
-  "description": "A simple, private weekly food journal for MAN v FAT Football participants. No calorie counting, no accounts.",
+  "name": "Weekly Food Planner",
+  "short_name": "Food Planner",
+  "description": "A simple, private weekly food planner for MvF participants. No calorie counting, no accounts.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

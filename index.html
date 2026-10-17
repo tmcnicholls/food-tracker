@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Weekly Food Journal</title>
-<meta name="description" content="A simple, private weekly food journal for MAN v FAT Football participants. No calorie counting, no accounts.">
+<title>Weekly Food Planner</title>
+<meta name="description" content="A simple, private weekly food planner for MvF participants. No calorie counting, no accounts.">
 
 <meta name="theme-color" content="#1b5e3d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Food Journal">
+<meta name="apple-mobile-web-app-title" content="Food Planner">
 
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-32.png" sizes="32x32">
@@ -22,8 +22,16 @@
 <a class="skip-link" href="#main-content">Skip to content</a>
 
 <header class="app-header">
-  <h1>Weekly Food Journal</h1>
-  <p class="subtitle">MAN v FAT — simple, honest food tracking. No calorie counting.</p>
+  <div class="app-header-grid">
+    <span class="app-header-spacer" aria-hidden="true"></span>
+    <div class="app-header-text">
+      <h1>Weekly Food Planner</h1>
+      <p class="subtitle">Simple, honest food tracking. No calorie counting.</p>
+    </div>
+    <button type="button" id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Theme: Auto. Activate to switch to Light.">
+      <span aria-hidden="true">🌓</span> <span id="theme-toggle-label">Auto</span>
+    </button>
+  </div>
 </header>
 
 <main id="main-content">
@@ -41,7 +49,7 @@
   </section>
 
   <section class="panel" aria-labelledby="settings-heading">
-    <h2 id="settings-heading" class="panel-heading">Journal settings</h2>
+    <h2 id="settings-heading" class="panel-heading">Plan settings</h2>
 
     <p class="week-range" id="week-range" aria-live="polite"></p>
 
@@ -82,7 +90,7 @@
     </div>
 
     <div class="actions">
-      <button type="button" id="generate-btn" class="primary-btn">Generate journal</button>
+      <button type="button" id="generate-btn" class="primary-btn">Generate plan</button>
     </div>
     <p id="generate-feedback" class="hint" role="status" aria-live="polite"></p>
   </section>
@@ -94,7 +102,7 @@
 
   <section class="panel" aria-labelledby="export-heading">
     <h2 id="export-heading" class="panel-heading">Export</h2>
-    <button type="button" id="copy-btn" class="primary-btn">Copy journal</button>
+    <button type="button" id="copy-btn" class="primary-btn">Copy plan</button>
     <p id="copy-feedback" class="hint" role="status" aria-live="polite"></p>
     <textarea id="copy-fallback" class="copy-fallback hidden" readonly aria-label="Journal text — select and copy manually"></textarea>
   </section>
@@ -102,9 +110,9 @@
   <section class="panel danger-zone" aria-labelledby="danger-heading">
     <h2 id="danger-heading" class="panel-heading">Storage</h2>
     <p class="hint">Everything is saved only on this device. Clearing browser data will erase it.</p>
-    <button type="button" id="clear-data-btn" class="text-btn">Clear all saved journals and preferences</button>
+    <button type="button" id="clear-data-btn" class="text-btn">Clear all saved plans and preferences</button>
     <p id="storage-warning" class="hint warning hidden" role="status">
-      This browser is blocking local storage, so your journal won't be saved between visits.
+      This browser is blocking local storage, so your plan won't be saved between visits.
     </p>
   </section>
 

@@ -37,6 +37,9 @@ const copyFeedbackEl = document.getElementById('copy-feedback');
 const copyFallbackEl = document.getElementById('copy-fallback');
 const clearDataBtn = document.getElementById('clear-data-btn');
 const storageWarningEl = document.getElementById('storage-warning');
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+const themeToggleLabelEl = document.getElementById('theme-toggle-label');
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
 const dialogEl = document.getElementById('confirm-dialog');
 const dialogTitleEl = document.getElementById('confirm-dialog-title');
@@ -79,6 +82,43 @@ function isWeekProtected(week) {
     })
   ));
 }
+
+// --- Theme (light / dark / auto) ----------------------------------------
+
+const THEME_LABELS = { auto: 'Auto', light: 'Light', dark: 'Dark' };
+const THEME_ICONS = { auto: '🌓', light: '☀️', dark: '🌙' };
+const THEME_NEXT = { auto: 'light', light: 'dark', dark: 'auto' };
+const darkSchemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+function applyTheme(theme) {
+  if (theme === 'light' || theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', theme);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+
+  const isDark = theme === 'dark' || (theme === 'auto' && !!darkSchemeQuery?.matches);
+  if (themeColorMeta) themeColorMeta.setAttribute('content', isDark ? '#15170f' : '#1b5e3d');
+
+  const nextTheme = THEME_NEXT[theme] ?? 'auto';
+  themeToggleLabelEl.textContent = THEME_LABELS[theme] ?? 'Auto';
+  themeToggleBtn.querySelector('span[aria-hidden]').textContent = THEME_ICONS[theme] ?? THEME_ICONS.auto;
+  themeToggleBtn.setAttribute('aria-label', `Theme: ${THEME_LABELS[theme] ?? 'Auto'}. Activate to switch to ${THEME_LABELS[nextTheme]}.`);
+}
+
+themeToggleBtn.addEventListener('click', () => {
+  const current = appState.preferences.theme ?? 'auto';
+  const nextTheme = THEME_NEXT[current] ?? 'auto';
+  appState.preferences.theme = nextTheme;
+  persist();
+  applyTheme(nextTheme);
+});
+
+// If the user hasn't forced a theme, keep the status-bar colour in sync when
+// the OS theme changes while the app is open.
+darkSchemeQuery?.addEventListener('change', () => {
+  if ((appState.preferences.theme ?? 'auto') === 'auto') applyTheme('auto');
+});
 
 // --- Small helpers -----------------------------------------------------
 
@@ -160,12 +200,12 @@ function syncSettingsControls() {
 
 function updateGenerateButtonAndCopyState() {
   const record = getCurrentWeekRecord();
-  generateBtn.textContent = record ? 'Regenerate journal' : 'Generate journal';
+  generateBtn.textContent = record ? 'Regenerate plan' : 'Generate plan';
   copyBtn.disabled = !record;
 }
 
 function placeholderHtml() {
-  return '<p class="hint">No journal yet for this week. Choose your settings above and press <strong>Generate journal</strong>.</p>';
+  return '<p class="hint">No plan yet for this week. Choose your settings above and press <strong>Generate plan</strong>.</p>';
 }
 
 function renderStatusButton(day, value, emoji, label) {
@@ -275,7 +315,7 @@ function buildExportText(week) {
 async function copyJournal() {
   const week = getCurrentWeekRecord();
   if (!week) {
-    showCopyFeedback('Generate a journal first.');
+    showCopyFeedback('Generate a plan first.');
     return;
   }
   const text = buildExportText(week);
@@ -326,7 +366,7 @@ async function handleGenerateClick() {
   persist();
   renderWeekPicker();
   renderJournal();
-  showGenerateFeedback(existing ? 'Journal regenerated.' : 'Journal generated — review and confirm your meals below.');
+  showGenerateFeedback(existing ? 'Plan regenerated.' : 'Plan generated — review and confirm your meals below.');
 }
 
 function handleStartNewWeek() {
@@ -507,6 +547,7 @@ journalEl.addEventListener('focusout', (e) => {
 if (!isStorageAvailable()) {
   storageWarningEl.classList.remove('hidden');
 }
+applyTheme(appState.preferences.theme ?? 'auto');
 syncAll();
 
 if ('serviceWorker' in navigator) {

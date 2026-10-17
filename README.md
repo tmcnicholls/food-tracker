@@ -1,7 +1,7 @@
-# Weekly Food Journal
+# Weekly Food Planner
 
-A free, private, mobile-first PWA for MAN v FAT Football participants to keep a
-simple weekly food journal — no calorie counting, no accounts, no backend.
+A free, private, mobile-first PWA to keep a
+simple weekly food plan — no calorie counting, no accounts, no backend.
 Generate a realistic Tuesday–Monday meal plan, edit it to match what you
 actually ate, set a RAG status per day, and copy the result straight into
 Apple Notes.
@@ -11,7 +11,7 @@ Everything runs entirely in the browser. Data is stored only in
 
 ## Features
 
-- Seven-day journal (Breakfast, Lunch, Tea, Snacks) generated from a bundled
+- Seven-day plan (Breakfast, Lunch, Tea, Snacks) generated from a bundled
   meal library — no network calls.
 - Configurable week start (any weekday, or an exact date), defaulting to
   Tuesday.
@@ -19,7 +19,7 @@ Everything runs entirely in the browser. Data is stored only in
   pattern, not a judgement of the user.
 - Optional Saturday takeaway (Chinese, Indian, Kebab, Pizza, Greek gyros).
 - Inline editing, per-meal confirm/skip, and a RAG status per day.
-- One-tap **Copy journal** for pasting into Apple Notes, with a clipboard
+- One-tap **Copy plan** for pasting into Apple Notes, with a clipboard
   fallback.
 - Installable on iOS via Safari's **Add to Home Screen**, with offline
   support after the first load.
@@ -137,10 +137,10 @@ script) or add a new size.
 ## Privacy
 
 - No accounts, no analytics, no third-party APIs.
-- All journals, preferences and edits live in this browser's `localStorage`
+- All plans, preferences and edits live in this browser's `localStorage`
   only, on this device.
 - Clearing the browser's site data (or using the in-app **Clear all saved
-  journals and preferences** button) permanently deletes everything saved
+  plans and preferences** button) permanently deletes everything saved
   by the app, with no way to recover it.
 
 ## Browser support notes
@@ -149,5 +149,5 @@ script) or add a new size.
   Firefox.
 - Uses the native `<dialog>` element for confirmations, with a
   `window.confirm()` fallback for older browsers that lack it.
-- Uses the async Clipboard API for **Copy journal**, with a visible
+- Uses the async Clipboard API for **Copy plan**, with a visible
   select-and-copy textarea fallback if clipboard access is unavailable.
