@@ -123,6 +123,7 @@ body {
 
 .app-header {
   padding: var(--space-5) var(--space-4) var(--space-3);
+  padding-top: calc(var(--space-5) + env(safe-area-inset-top));
 }
 .app-header-grid {
   display: grid;
