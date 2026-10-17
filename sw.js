@@ -3,7 +3,7 @@
 //
 // Bump CACHE_NAME whenever any cached file changes so clients pick up the
 // new version instead of serving stale assets forever.
-const CACHE_NAME = 'mvf-food-journal-v2';
+const CACHE_NAME = 'mvf-food-journal-v3';
 
 const APP_SHELL = [
   './',
