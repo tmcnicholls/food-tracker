@@ -6,7 +6,9 @@
 
 import { breakfast, lunch, tea, snacks, takeaway, takeawayCategories } from './mealLibrary.js';
 import { addDays, parseISODate, toISODate, weekdayName } from './dates.js';
-import { mulberry32, pickFromArray, weightedPick } from './rng.js';
+import {
+  mulberry32, pickFromArray, weightedPick, freshSeed,
+} from './rng.js';
 
 const WEEKEND_DAYS = new Set(['Saturday', 'Sunday']);
 
@@ -107,4 +109,61 @@ export function generateWeek({ startDateISO, profile, takeawayEnabled, seed }) {
   }
 
   return { days, takeawayCategory };
+}
+
+const SIMPLE_LIBRARIES = { breakfast, lunch, snacks };
+
+/**
+ * Re-roll a single meal within an already-generated week, without touching
+ * anything else. Used by the per-meal "get a different suggestion" button.
+ * Picks a fresh random replacement (not derived from the week's stored
+ * seed), excludes the meal's current text, and — for tea — still avoids
+ * repeating another day's tea (or, for a Saturday takeaway, stays within
+ * the week's already-chosen takeaway category).
+ *
+ * @param {object} week - a week record as produced by generateWeek()
+ * @param {number} dayIndex - 0-6
+ * @param {'breakfast'|'lunch'|'tea'|'snacks'} mealKey
+ * @returns {{ suggestion: string, text: string, status: 'suggested' }}
+ */
+export function regenerateMeal(week, dayIndex, mealKey) {
+  const rng = mulberry32(freshSeed());
+  const day = week.days[dayIndex];
+  const isWeekday = !WEEKEND_DAYS.has(day.weekday);
+  const ctx = { profile: week.profile, isWeekday };
+  const currentText = day.meals[mealKey].text;
+
+  let newText;
+
+  if (mealKey === 'tea' && day.weekday === 'Saturday' && week.takeawayEnabled && week.takeawayCategory) {
+    const options = takeaway[week.takeawayCategory].filter((t) => t !== currentText);
+    newText = pickFromArray(options.length ? options : takeaway[week.takeawayCategory], rng);
+  } else if (mealKey === 'tea') {
+    const usedElsewhere = new Set(
+      week.days
+        .filter((_, i) => i !== dayIndex)
+        .map((d) => d.meals.tea.text),
+    );
+    usedElsewhere.add(currentText);
+    const pool = tea.filter((item) => !usedElsewhere.has(item.text));
+    newText = weightedPick(pool.length ? pool : tea, rng, (item) => weightFor(item, ctx)).text;
+  } else if (mealKey === 'lunch') {
+    const prevDay = dayIndex > 0 ? week.days[dayIndex - 1] : null;
+    const prevTeaItem = prevDay ? tea.find((item) => item.text === prevDay.meals.tea.text) : null;
+    const leftoverChance = PROFILE_WEIGHTS[week.profile]?.leftoverChance ?? 0.25;
+    if (prevTeaItem?.tags?.leftoverSource && rng() < leftoverChance) {
+      const leftoverText = `Leftover ${mainDishName(prevTeaItem.text)}`;
+      newText = leftoverText !== currentText ? leftoverText : undefined;
+    }
+    if (!newText) {
+      const pool = lunch.filter((item) => item.text !== currentText);
+      newText = weightedPick(pool.length ? pool : lunch, rng, (item) => weightFor(item, ctx)).text;
+    }
+  } else {
+    const lib = SIMPLE_LIBRARIES[mealKey];
+    const pool = lib.filter((item) => item.text !== currentText);
+    newText = weightedPick(pool.length ? pool : lib, rng, (item) => weightFor(item, ctx)).text;
+  }
+
+  return { suggestion: newText, text: newText, status: 'suggested' };
 }

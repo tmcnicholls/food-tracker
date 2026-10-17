@@ -6,7 +6,7 @@ import {
   addDays, parseISODate, toISODate, weekdayName,
   formatLongDate, formatWeekRange, sameWeekOccurrence, todayLocal,
 } from './dates.js';
-import { generateWeek } from './generator.js';
+import { generateWeek, regenerateMeal } from './generator.js';
 import { freshSeed } from './rng.js';
 import { loadState, saveState, clearAll, isStorageAvailable } from './storage.js';
 
@@ -222,9 +222,10 @@ function renderMealRow(day, key) {
     <div class="meal-row-top">
       <span class="meal-label">${label}</span>
       <div class="meal-controls">
+        <button type="button" class="icon-btn regenerate-btn" data-action="regenerate" aria-label="Get a different ${label} suggestion">↻</button>
+        <button type="button" class="icon-btn edit-btn" data-action="edit" aria-label="Edit ${label} text">✎</button>
         <button type="button" class="icon-btn confirm-btn" data-action="confirm" aria-pressed="${meal.status === 'confirmed'}" aria-label="Mark ${label} as confirmed">✓</button>
         <button type="button" class="icon-btn skip-btn" data-action="skip" aria-pressed="${meal.status === 'skipped'}" aria-label="Mark ${label} as skipped">⤬</button>
-        <button type="button" class="icon-btn edit-btn" data-action="edit" aria-label="Edit ${label} text">✎</button>
       </div>
     </div>
     <p class="meal-text${meal.status === 'skipped' ? ' is-skipped' : ''}" data-role="display">${escapeHtml(meal.text)}<span class="meal-status-tag">(${statusTag})</span></p>
@@ -415,6 +416,28 @@ function handleMealAction(dayIndex, mealKey, action) {
   renderJournal();
 }
 
+async function handleMealRegenerate(dayIndex, mealKey) {
+  const week = getCurrentWeekRecord();
+  if (!week) return;
+  const meal = week.days[dayIndex].meals[mealKey];
+  const label = MEAL_LABELS[mealKey];
+  const alreadyReviewed = meal.status !== 'suggested' || meal.text !== meal.suggestion;
+
+  if (alreadyReviewed) {
+    const ok = await confirmDialog({
+      title: 'Get a different suggestion?',
+      message: `This ${label.toLowerCase()} has already been confirmed, skipped or edited. Getting a new suggestion will replace it.`,
+      confirmLabel: 'Get new suggestion',
+    });
+    if (!ok) return;
+  }
+
+  week.days[dayIndex].meals[mealKey] = regenerateMeal(week, dayIndex, mealKey);
+  week.updatedAt = Date.now();
+  persist();
+  renderJournal();
+}
+
 function handleEditToggle(rowEl) {
   rowEl.querySelector('[data-role="display"]').classList.add('hidden');
   const input = rowEl.querySelector('[data-role="input"]');
@@ -516,6 +539,8 @@ journalEl.addEventListener('click', (e) => {
     const action = actionBtn.dataset.action;
     if (action === 'edit') {
       handleEditToggle(row);
+    } else if (action === 'regenerate') {
+      handleMealRegenerate(dayIndex, mealKey);
     } else {
       handleMealAction(dayIndex, mealKey, action);
     }
