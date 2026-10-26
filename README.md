@@ -21,6 +21,10 @@ Everything runs entirely in the browser. Data is stored only in
 - Inline editing, per-meal confirm/skip, and a RAG status per day.
 - One-tap **Copy plan** for pasting into Apple Notes, with a clipboard
   fallback.
+- **Share with your team** for weeks you can't attend: creates two portrait
+  images (days 1–4 and 5–7) with your name on them, then opens the iOS share
+  sheet so you can save them to Photos or send them to the team chat. Falls
+  back to press-and-hold to save, or download links.
 - Installable on iOS via Safari's **Add to Home Screen**, with offline
   support after the first load.
 
@@ -34,6 +38,7 @@ js/dates.js          Local-calendar-date helpers (no UTC day-shift bugs)
 js/rng.js            Seeded PRNG + weighted random pick helpers
 js/generator.js      Deterministic weekly meal-plan generator
 js/storage.js        localStorage persistence (with in-memory fallback)
+js/shareImage.js     Draws the week as two 1080x1920 share images on a canvas
 js/app.js            UI controller: rendering + event wiring
 manifest.json        Web app manifest (PWA metadata/icons)
 sw.js                Service worker: caches the app shell for offline use
@@ -101,6 +106,7 @@ exits non-zero if anything failed, so it's safe to use as a CI gate.
 | `meal-regenerate.test.js` | The per-meal "get a different suggestion" button, including the confirm-before-discard prompt and the generator's invariants (no duplicate tea in a week; takeaway regeneration stays in its category). |
 | `export-wording.test.js` | Unconfirmed meals export as plain text, with no "(suggested — not yet confirmed)" annotation; skipped meals still say "Skipped". |
 | `update-lifecycle.test.js` | The full PWA update flow across two simulated builds: first install, update detection, the waiting-worker prompt, exactly one reload with no loop, offline survival, existing `localStorage` data surviving an update byte-for-byte, a failed update check not breaking the app, and correct operation under a GitHub Pages–style subpath. |
+| `share-images.test.js` | The "Share with your team" image export: required name field and its persistence, two 1080×1920 PNGs split days 1–4 / 5–7, the share sheet receiving both files (stubbed), the long-press/download fallback, stale previews cleared after edits, content following the text-export rules, and long meal text shrinking to fit. |
 | `safe-area-inset.test.js` | The header clears an iPhone Dynamic Island/notch (simulated via Chrome DevTools Protocol) without affecting unnotched devices. |
 
 ### What this doesn't cover
@@ -272,6 +278,8 @@ script) or add a new size.
 - No accounts, no analytics, no third-party APIs.
 - All plans, preferences and edits live in this browser's `localStorage`
   only, on this device.
+- Share images are drawn on the device. They only leave it when you choose
+  where to send them from the share sheet.
 - Clearing the browser's site data (or using the in-app **Clear all saved
   plans and preferences** button) permanently deletes everything saved
   by the app, with no way to recover it.
@@ -284,3 +292,7 @@ script) or add a new size.
   `window.confirm()` fallback for older browsers that lack it.
 - Uses the async Clipboard API for **Copy plan**, with a visible
   select-and-copy textarea fallback if clipboard access is unavailable.
+- **Share with your team** uses the Web Share API with files (iOS Safari
+  15+) to open the share sheet. Where sharing files isn't supported (for
+  example most desktop browsers), the button is hidden and the preview
+  images can be saved with a long press or the download links instead.

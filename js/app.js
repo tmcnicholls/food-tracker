@@ -9,6 +9,7 @@ import {
 import { generateWeek, regenerateMeal } from './generator.js';
 import { freshSeed } from './rng.js';
 import { loadState, saveState, clearAll, isStorageAvailable } from './storage.js';
+import { renderWeekImages, canvasToBlob } from './shareImage.js';
 
 const MEAL_ORDER = ['breakfast', 'lunch', 'tea', 'snacks'];
 const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', tea: 'Tea', snacks: 'Snacks' };
@@ -37,6 +38,14 @@ const copyFeedbackEl = document.getElementById('copy-feedback');
 const copyFallbackEl = document.getElementById('copy-fallback');
 const clearDataBtn = document.getElementById('clear-data-btn');
 const storageWarningEl = document.getElementById('storage-warning');
+const shareNameInput = document.getElementById('share-name');
+const createImagesBtn = document.getElementById('create-images-btn');
+const shareFeedbackEl = document.getElementById('share-feedback');
+const sharePreviewEl = document.getElementById('share-preview');
+const sharePreviewImagesEl = document.getElementById('share-preview-images');
+const shareImagesBtn = document.getElementById('share-images-btn');
+const shareLongpressHintEl = document.getElementById('share-longpress-hint');
+const shareDownloadLinksEl = document.getElementById('share-download-links');
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const themeToggleLabelEl = document.getElementById('theme-toggle-label');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -144,6 +153,10 @@ function showCopyFeedback(message) {
   copyFeedbackEl.textContent = message;
 }
 
+function showShareFeedback(message) {
+  shareFeedbackEl.textContent = message;
+}
+
 /** Native <dialog>-backed confirm, with a window.confirm() fallback for
  *  browsers that don't support showModal(). Resolves true/false. */
 function confirmDialog({ title, message, confirmLabel = 'Confirm' }) {
@@ -198,6 +211,7 @@ function syncSettingsControls() {
   startDateInput.value = appState.currentWeekKey;
   setProfileButtons(record?.profile ?? appState.preferences.profile);
   takeawayCheckbox.checked = record?.takeawayEnabled ?? appState.preferences.takeawayEnabled;
+  shareNameInput.value = appState.preferences.name ?? '';
   weekRangeEl.textContent = `Week: ${formatWeekRange(startDate, addDays(startDate, 6))}`;
 }
 
@@ -205,6 +219,7 @@ function updateGenerateButtonAndCopyState() {
   const record = getCurrentWeekRecord();
   generateBtn.textContent = record ? 'Regenerate plan' : 'Generate plan';
   copyBtn.disabled = !record;
+  createImagesBtn.disabled = !record;
 }
 
 function placeholderHtml() {
@@ -270,6 +285,7 @@ function renderJournal() {
     openIndices = new Set([0]);
   }
 
+  clearSharePreview();
   const week = getCurrentWeekRecord();
   if (!week) {
     journalEl.innerHTML = placeholderHtml();
@@ -343,6 +359,104 @@ async function copyJournal() {
   }
 }
 
+// --- Share as images ------------------------------------------------------
+//
+// Two taps on purpose: "Create share images" draws the PNGs and shows a
+// preview; "Share or save images" then calls navigator.share() straight from
+// the tap with files that are already built. iOS Safari can reject share()
+// if anything async (like encoding the PNGs) happens between the tap and the
+// call, so the files must be ready beforehand.
+
+let sharePreviewFiles = null;
+let sharePreviewUrls = [];
+let sharePreviewToken = 0;
+
+function clearSharePreview() {
+  sharePreviewToken += 1;
+  sharePreviewUrls.forEach((u) => URL.revokeObjectURL(u));
+  sharePreviewUrls = [];
+  sharePreviewFiles = null;
+  sharePreviewImagesEl.innerHTML = '';
+  shareDownloadLinksEl.innerHTML = '';
+  sharePreviewEl.classList.add('hidden');
+  showShareFeedback('');
+}
+
+function canShareFiles(files) {
+  try {
+    return typeof navigator.share === 'function'
+      && typeof navigator.canShare === 'function'
+      && navigator.canShare({ files });
+  } catch {
+    return false;
+  }
+}
+
+async function handleCreateImages() {
+  const week = getCurrentWeekRecord();
+  if (!week) {
+    showShareFeedback('Generate a plan first.');
+    return;
+  }
+  const name = (appState.preferences.name ?? '').trim();
+  if (!name) {
+    showShareFeedback('Add your name first so the coach knows whose journal it is.');
+    shareNameInput.focus();
+    return;
+  }
+
+  clearSharePreview();
+  const token = sharePreviewToken;
+  const rendered = renderWeekImages(week, { name });
+  let blobs;
+  try {
+    blobs = await Promise.all(rendered.map(({ canvas }) => canvasToBlob(canvas)));
+  } catch {
+    showShareFeedback('Could not create the images on this device.');
+    return;
+  }
+  // The journal changed while the images were encoding — they're stale.
+  if (token !== sharePreviewToken) return;
+
+  const files = blobs.map((blob, i) => new File(
+    [blob],
+    `food-journal-${week.startDate}-${i + 1}-of-${blobs.length}.png`,
+    { type: 'image/png' },
+  ));
+  sharePreviewUrls = blobs.map((blob) => URL.createObjectURL(blob));
+  sharePreviewImagesEl.innerHTML = rendered.map(({ page }, i) => (
+    `<img src="${sharePreviewUrls[i]}" width="1080" height="1920" alt="${escapeAttr(`Food journal image ${page.pageNumber} of ${page.pageCount} for ${name}: ${page.dayRangeLabel}`)}">`
+  )).join('');
+
+  const shareable = canShareFiles(files);
+  shareImagesBtn.classList.toggle('hidden', !shareable);
+  shareDownloadLinksEl.classList.toggle('hidden', shareable);
+  if (shareable) {
+    shareLongpressHintEl.textContent = 'Or press and hold each image and choose Save to Photos.';
+  } else {
+    shareLongpressHintEl.textContent = 'Press and hold each image and choose Save to Photos, or download them below.';
+    shareDownloadLinksEl.innerHTML = files.map((file, i) => (
+      `<a href="${sharePreviewUrls[i]}" download="${escapeAttr(file.name)}">Download image ${i + 1} of ${files.length}</a>`
+    )).join('');
+  }
+
+  sharePreviewFiles = files;
+  sharePreviewEl.classList.remove('hidden');
+  showShareFeedback(shareable
+    ? 'Images ready. Check them below, then share them to your team chat or save them to Photos.'
+    : 'Images ready below.');
+}
+
+function handleShareImages() {
+  if (!sharePreviewFiles) return;
+  navigator.share({ files: sharePreviewFiles })
+    .then(() => showShareFeedback('Shared.'))
+    .catch((err) => {
+      if (err?.name === 'AbortError') return; // user closed the share sheet
+      showShareFeedback("Couldn't open the share sheet. Press and hold each image to save it instead.");
+    });
+}
+
 // --- Event handlers --------------------------------------------------------
 
 async function handleGenerateClick() {
@@ -365,7 +479,9 @@ async function handleGenerateClick() {
   appState.weeks[startISO] = {
     startDate: startISO, profile, takeawayEnabled, takeawayCategory, seed, days, updatedAt: Date.now(),
   };
-  appState.preferences = { startWeekday: weekdayName(parseISODate(startISO)), profile, takeawayEnabled };
+  appState.preferences = {
+    ...appState.preferences, startWeekday: weekdayName(parseISODate(startISO)), profile, takeawayEnabled,
+  };
   persist();
   renderWeekPicker();
   renderJournal();
@@ -524,6 +640,14 @@ takeawayCheckbox.addEventListener('change', () => {
 
 generateBtn.addEventListener('click', handleGenerateClick);
 copyBtn.addEventListener('click', copyJournal);
+createImagesBtn.addEventListener('click', handleCreateImages);
+shareImagesBtn.addEventListener('click', handleShareImages);
+
+shareNameInput.addEventListener('input', () => {
+  appState.preferences.name = shareNameInput.value;
+  persist();
+  clearSharePreview();
+});
 clearDataBtn.addEventListener('click', handleClearData);
 
 journalEl.addEventListener('click', (e) => {

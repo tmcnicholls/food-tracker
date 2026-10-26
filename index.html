@@ -105,6 +105,22 @@
     <button type="button" id="copy-btn" class="primary-btn">Copy plan</button>
     <p id="copy-feedback" class="hint" role="status" aria-live="polite"></p>
     <textarea id="copy-fallback" class="copy-fallback hidden" readonly aria-label="Journal text — select and copy manually"></textarea>
+
+    <h3 class="panel-subheading">Share with your team</h3>
+    <p class="hint">Can't make a session? Create two images of this week for a teammate to show the coach.</p>
+    <div class="field share-name-field">
+      <label for="share-name">Your name</label>
+      <input type="text" id="share-name" autocomplete="name" aria-describedby="share-name-hint">
+      <p id="share-name-hint" class="hint">Shown on the images so the coach knows whose journal it is. Saved on this device only.</p>
+    </div>
+    <button type="button" id="create-images-btn" class="secondary-btn full-width">Create share images</button>
+    <p id="share-feedback" class="hint" role="status" aria-live="polite"></p>
+    <div id="share-preview" class="share-preview hidden">
+      <div id="share-preview-images" class="share-preview-images"></div>
+      <button type="button" id="share-images-btn" class="primary-btn">Share or save images</button>
+      <p id="share-longpress-hint" class="hint"></p>
+      <div id="share-download-links" class="share-download-links hidden"></div>
+    </div>
   </section>
 
   <section class="panel danger-zone" aria-labelledby="danger-heading">

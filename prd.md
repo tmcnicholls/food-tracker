@@ -1,6 +1,6 @@
 # Product Requirements Document: MAN v FAT Weekly Food Journal PWA
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft  
 **Product type:** Mobile-first Progressive Web App (PWA)  
 **Hosting:** Free static hosting, preferably GitHub Pages  
@@ -44,6 +44,7 @@ The app should feel like a practical food diary, not a diet app. It should encou
 - Show a RAG-style status indicator for each day.
 - Allow users to edit and confirm meals quickly.
 - Export the journal as plain text using a copy button.
+- Export the journal as two shareable images for weeks the user cannot attend.
 - Work on an iPhone home screen and in mobile Safari.
 - Host the application entirely for free.
 
@@ -56,7 +57,7 @@ The MVP must not include:
 - User accounts, authentication or cloud synchronisation.
 - Paid APIs, AI inference or third-party meal-generation services.
 - Grocery ordering, shopping integrations or recipe scraping.
-- Social sharing, leaderboards or MAN v FAT account integrations.
+- Social sharing, leaderboards or MAN v FAT account integrations. (Handing images to the device's own share sheet so the user can send them to their team — FR-09 — is not social sharing: the app never posts anything or contacts a server.)
 - Medical advice or weight-loss targets.
 
 ## 3. Target user and primary use case
@@ -75,6 +76,18 @@ Their desired workflow is:
 8. Paste it into Apple Notes.
 
 The workflow should not require calorie calculations, lengthy forms or recipe research.
+
+### 3.1 Secondary use case: away weeks
+
+Some weeks the participant cannot attend — working away, or on holiday. Their tracking still needs to reach the coach, so a teammate shows it on their behalf. The participant:
+
+1. Reviews the week as usual.
+2. Enters their name once (remembered on the device).
+3. Creates two images of the week.
+4. Shares them to the team's group chat, or saves them to Photos first.
+5. A teammate opens the images and shows them to the coach.
+
+The teammate does not need the app; the images must stand on their own.
 
 ## 4. Functional requirements
 
@@ -299,6 +312,7 @@ Use browser local storage to retain:
 - Meal confirmation states.
 - Daily RAG statuses.
 - Saturday takeaway preference and selected takeaway.
+- The user's name for shared images (FR-09).
 
 Requirements:
 
@@ -310,6 +324,28 @@ Requirements:
 - Include a way to clear locally stored journals and preferences.
 
 Data should remain on the device. No information should be transmitted to an external service.
+
+### FR-09: Share as images
+
+**Priority:** P1 — Should have
+
+Provide a **Share with your team** section in the Export area that turns the current week into images a teammate can show to the coach.
+
+The feature must:
+
+- Provide a **Your name** field, stored locally with the other preferences, and require a name before creating images so the coach knows whose journal it is.
+- Create exactly two portrait 9:16 PNG images at 1080 × 1920: days 1–4 on the first and days 5–7 on the second.
+- Show on every image: "MAN v FAT · Weekly Food Journal", the user's name, the week's date range, a page indicator (1 / 2, 2 / 2), and which days that image covers.
+- Show for each day: weekday and date, its RAG status as a coloured marker plus a word (On track / Mixed / Off plan), and all four meal categories.
+- Follow the same content rules as the plain-text export (FR-07): days not yet reviewed show no status, unconfirmed meals appear as plain text, and skipped meals read "Skipped".
+- Use a fixed light colour scheme, so the images look the same whatever theme the app uses.
+- Keep text readable: long meal descriptions wrap, and the layout shrinks (and, if needed, limits the lines per meal, ending with an ellipsis) so that nothing ever runs off the image.
+- Show a preview of both images before sharing.
+- Where the browser supports sharing files (Web Share API Level 2; iOS Safari 15+), offer a **Share or save images** button that opens the system share sheet with both files, allowing **Save Images** to Photos or sending straight to a messaging app. The files must be prepared before that button is tapped, because iOS may reject a share started after asynchronous work.
+- Where file sharing is unsupported, hide that button and fall back to saving each preview image with a long press, plus download links.
+- Discard the preview whenever the journal, the selected week or the name changes, so outdated images are never shared.
+- Draw the images on the device with the browser's canvas, with no third-party library, network request or server.
+- Include no calorie values, macro figures or weight targets (AC-13).
 
 ## 5. User interface and experience
 
@@ -327,7 +363,8 @@ Recommended layout:
 6. Generate / regenerate button.
 7. Seven daily journal sections.
 8. Copy journal button.
-9. New week action.
+9. Share with your team: name field, create images, preview and share (FR-09).
+10. New week action.
 
 Use collapsible day sections if necessary to keep the screen manageable, but ensure the full week can be reviewed without excessive navigation.
 
@@ -564,6 +601,18 @@ Across all screens and exported output, there are no calorie totals, macro calcu
 
 Given the journal contains unconfirmed suggestions, when the user exports it, then the application does not silently present those suggestions as verified food records.
 
+### AC-15: Share as images
+
+Given the user has entered their name and generated a journal, when they create share images, then two 1080 × 1920 PNG previews appear covering days 1–4 and days 5–7, each showing their name and the week's date range, and following the same status, unconfirmed and skipped rules as the plain-text export.
+
+### AC-16: Share sheet and fallback
+
+Given the browser supports sharing files, when the user taps **Share or save images**, then the system share sheet opens with both PNG files. Given it does not, then the share button is hidden and each image can be saved with a long press or downloaded.
+
+### AC-17: No stale images
+
+Given share images have been created, when the user edits the journal, changes week or changes their name, then the preview is discarded and must be created again before sharing.
+
 ## 10. Success metrics
 
 The MVP should be evaluated against the following usability targets:
@@ -571,6 +620,7 @@ The MVP should be evaluated against the following usability targets:
 - A new journal can be generated in under 30 seconds.
 - A user can review, confirm and copy a week in under two minutes.
 - A completed journal contains all seven days and 28 meal categories.
+- Share images for an away week can be created and sent to the team chat in under 30 seconds.
 - No edits are lost during ordinary refreshes or navigation.
 - The application remains usable offline after its first successful load.
 - The full deployment can be maintained without recurring hosting or API costs.

@@ -14,6 +14,7 @@ function defaultState() {
       profile: 'great',
       takeawayEnabled: false,
       theme: 'auto',
+      name: '',
     },
   };
 }
